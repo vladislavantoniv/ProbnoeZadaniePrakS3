@@ -1,5 +1,6 @@
 package com.lab.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lab.entity.enums.Gender;
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -34,10 +35,11 @@ public class Patient {
 
     @Column(unique = true)
     private String email;
+
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Order> orders = new ArrayList<>();
 
-    // Конструкторы
     public Patient() {}
 
     public Patient(String lastName, String firstName, String middleName,
@@ -75,6 +77,21 @@ public class Patient {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
     public List<Order> getOrders() { return orders; }
     public void setOrders(List<Order> orders) { this.orders = orders; }
+
+    @Override
+    public String toString() {
+        return "Patient{" +
+                "id=" + id +
+                ", lastName='" + lastName + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", middleName='" + middleName + '\'' +
+                ", birthDate=" + birthDate +
+                ", gender=" + gender +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", email='" + email + '\'' +
+                '}';
+    }
 }

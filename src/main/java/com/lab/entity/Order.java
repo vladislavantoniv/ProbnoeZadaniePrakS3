@@ -1,8 +1,11 @@
 package com.lab.entity;
 
 import com.lab.entity.enums.OrderStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -25,6 +28,10 @@ public class Order {
     @Column(columnDefinition = "TEXT")
     private String comment;
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Test> tests = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdDate = LocalDateTime.now();
@@ -33,7 +40,6 @@ public class Order {
         }
     }
 
-    // Конструкторы
     public Order() {}
 
     public Order(Patient patient, String comment) {
@@ -41,7 +47,6 @@ public class Order {
         this.comment = comment;
     }
 
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -56,4 +61,18 @@ public class Order {
 
     public String getComment() { return comment; }
     public void setComment(String comment) { this.comment = comment; }
+
+    public List<Test> getTests() { return tests; }
+    public void setTests(List<Test> tests) { this.tests = tests; }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "id=" + id +
+                ", patient=" + (patient != null ? patient.getId() : "null") +
+                ", createdDate=" + createdDate +
+                ", status=" + status +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }
