@@ -1,7 +1,10 @@
 package com.lab.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "test_types")
@@ -22,7 +25,10 @@ public class TestType {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    // Конструкторы
+    @OneToMany(mappedBy = "testType", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Test> tests = new ArrayList<>();
+
     public TestType() {}
 
     public TestType(String name, String code, String description, BigDecimal price) {
@@ -32,7 +38,6 @@ public class TestType {
         this.price = price;
     }
 
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -47,4 +52,18 @@ public class TestType {
 
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
+
+    public List<Test> getTests() { return tests; }
+    public void setTests(List<Test> tests) { this.tests = tests; }
+
+    @Override
+    public String toString() {
+        return "TestType{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", code='" + code + '\'' +
+                ", description='" + description + '\'' +
+                ", price=" + price +
+                '}';
+    }
 }

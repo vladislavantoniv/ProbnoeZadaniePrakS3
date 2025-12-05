@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Управление заявками</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h1 { color: #2c3e50; border-bottom: 3px solid #e74c3c; padding-bottom: 10px; }
+    .back-link { display: inline-block; margin-bottom: 20px; color: #3498db; text-decoration: none; font-weight: bold; }
+    .form-container { background: #fdedec; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #e74c3c; }
+    .form-container h3 { margin-top: 0; color: #2c3e50; }
+    .form-group { margin: 15px 0; }
+    label { display: inline-block; width: 180px; font-weight: bold; color: #2c3e50; }
+    input, select, textarea { padding: 10px; width: 400px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 14px; }
+    textarea { height: 80px; resize: vertical; }
+    button { padding: 12px 25px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #c0392b; }
+    table { width: 100%; border-collapse: collapse; margin: 25px 0; }
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+    th { background-color: #e74c3c; color: white; }
+    tr:nth-child(even) { background-color: #f8f9fa; }
+    .empty-message { text-align: center; color: #7f8c8d; padding: 20px; font-style: italic; }
+    .status-registered { background: #f39c12; color: white; padding: 4px 8px; border-radius: 4px; }
+    .status-in_progress { background: #3498db; color: white; padding: 4px 8px; border-radius: 4px; }
+    .status-completed { background: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; }
+    .status-canceled { background: #95a5a6; color: white; padding: 4px 8px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <a th:href="@{/web}" class="back-link">← На главную</a>
+  <h1>📝 Управление заявками</h1>
+
+  <div class="form-container">
+    <h3>Создать новую заявку</h3>
+    <form th:action="@{/web/orders}" method="post">
+      <div class="form-group">
+        <label>Пациент:</label>
+        <select name="patientId" required>
+          <option value="">Выберите пациента</option>
+          <option th:each="patient : ${patients}"
+                  th:value="${patient.id}"
+                  th:text="${patient.lastName + ' ' + patient.firstName + ' (' + patient.birthDate + ')'}"></option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Комментарий:</label>
+        <textarea name="comment" placeholder="Введите комментарий к заявке..."></textarea>
+      </div>
+      <button type="submit">📄 Создать заявку</button>
+    </form>
+  </div>
+
+  <h3>Список заявок</h3>
+  <table th:if="${not orders.empty}">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Пациент</th>
+      <th>Дата создания</th>
+      <th>Статус</th>
+      <th>Комментарий</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="order : ${orders}">
+      <td th:text="${order.id}"></td>
+      <td th:text="${order.patient.lastName + ' ' + order.patient.firstName}"></td>
+      <td th:text="${#temporals.format(order.createdDate, 'dd.MM.yyyy HH:mm')}"></td>
+      <td>
+                        <span th:classappend="'status-' + ${order.status.name().toLowerCase()}"
+                              th:text="${order.status == 'REGISTERED' ? 'Зарегистрирована' :
+                                       order.status == 'IN_PROGRESS' ? 'В работе' :
+                                       order.status == 'COMPLETED' ? 'Завершена' : 'Отменена'}">
+                        </span>
+      </td>
+      <td th:text="${order.comment} ?: '-'"></td>
+    </tr>
+    </tbody>
+  </table>
+  <div th:if="${orders.empty}" class="empty-message">
+    📝 Нет созданных заявок
+  </div>
+</div>
+</body>
+</html>

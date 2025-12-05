@@ -32,7 +32,6 @@ public class Test {
     @Column(nullable = false)
     private TestStatus status = TestStatus.PENDING;
 
-    // Конструкторы
     public Test() {}
 
     public Test(Order order, TestType testType) {
@@ -40,7 +39,6 @@ public class Test {
         this.testType = testType;
     }
 
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -61,4 +59,17 @@ public class Test {
 
     public TestStatus getStatus() { return status; }
     public void setStatus(TestStatus status) { this.status = status; }
+
+    @Override
+    public String toString() {
+        return "Test{" +
+                "id=" + id +
+                ", order=" + (order != null ? order.getId() : "null") +
+                ", testType=" + (testType != null ? testType.getId() : "null") +
+                ", completedDate=" + completedDate +
+                ", result='" + result + '\'' +
+                ", referenceValues='" + referenceValues + '\'' +
+                ", status=" + status +
+                '}';
+    }
 }
