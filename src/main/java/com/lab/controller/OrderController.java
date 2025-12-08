@@ -1,84 +1,78 @@
 package com.lab.controller;
 
-import com.lab.entity.Order;
+import com.lab.dto.OrderDTO;
+import com.lab.dto.PageResponse;
 import com.lab.entity.enums.OrderStatus;
-import com.lab.repository.OrderRepository;
+import com.lab.service.OrderService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Map;
-
+@SuppressWarnings("unused")
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
 
-    private final OrderRepository orderRepository;
+    private final OrderService orderService;
 
-    public OrderController(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
     }
 
     @GetMapping
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    public PageResponse<OrderDTO> getAllOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+        return orderService.getAllOrders(page, size, sortBy, direction);
     }
 
     @GetMapping("/{id}")
-    public Order getOrderById(@PathVariable Long id) {
-        return orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Заявка с номером: " + id + "не найдена"));
+    public OrderDTO getOrderById(@PathVariable Long id) {
+        return orderService.getOrderById(id);
     }
 
     @PostMapping
-    public Order createOrder(@RequestBody Order order) {
-        return orderRepository.save(order);
+    public ResponseEntity<OrderDTO> createOrder(@Valid @RequestBody OrderDTO orderDTO) {
+        OrderDTO createdOrder = orderService.createOrder(orderDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
     }
 
     @PutMapping("/{id}")
-    public Order updateOrder(@PathVariable Long id, @RequestBody Order order) {
-        if (!orderRepository.existsById(id)) {
-            throw new RuntimeException("Заявка с номером: " + id + "не найдена");
-        }
-        order.setId(id);
-        return orderRepository.save(order);
+    public OrderDTO updateOrder(@PathVariable Long id, @Valid @RequestBody OrderDTO orderDTO) {
+        return orderService.updateOrder(id, orderDTO);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteOrder(@PathVariable Long id) {
-        if (!orderRepository.existsById(id)) {
-            throw new RuntimeException("Заявка с номером: " + id + "не найдена");
-        }
-        orderRepository.deleteById(id);
+    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
+        orderService.deleteOrder(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/patient/{patientId}")
-    public List<Order> getOrdersByPatientId(@PathVariable Long patientId) {
-        return orderRepository.findByPatientId(patientId);
+    public PageResponse<OrderDTO> getOrdersByPatientId(
+            @PathVariable Long patientId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdDate") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+        return orderService.getOrdersByPatientId(patientId, page, size, sortBy, direction);
     }
 
     @PutMapping("/{id}/status")
-    public Order updateOrderStatus(@PathVariable Long id, @RequestBody Map<String, String> request) {
-        String statusStr = request.get("status");
-
-        OrderStatus status;
-        try {
-            status = OrderStatus.valueOf(statusStr.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Неправильный статус заявки: " + statusStr +
-                    "Нужно одно из этих: REGISTERED, IN_PROGRESS, COMPLETED, CANCELED");
-        }
-
-        return orderRepository.updateStatus(id, status);
+    public OrderDTO updateOrderStatus(@PathVariable Long id, @RequestBody UpdateStatusRequest request) {
+        return orderService.updateOrderStatus(id, request.getStatus());
     }
+    static class UpdateStatusRequest {
+        private OrderStatus status;
 
-    @GetMapping("/status/{status}")
-    public List<Order> getOrdersByStatus(@PathVariable String status) {
-        OrderStatus orderStatus;
-        try {
-            orderStatus = OrderStatus.valueOf(status.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Неправильный статус заявки: " + status +
-                    "Нужно одно из этих: REGISTERED, IN_PROGRESS, COMPLETED, CANCELED");
+        public OrderStatus getStatus() {
+            return status;
         }
-        return orderRepository.findByStatus(orderStatus);
+
+        public void setStatus(OrderStatus status) {
+            this.status = status;
+        }
     }
 }

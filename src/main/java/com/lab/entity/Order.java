@@ -19,11 +19,11 @@ public class Order {
     private Patient patient;
 
     @Column(name = "created_date", nullable = false)
-    private LocalDateTime createdDate;
+    private LocalDateTime createdDate = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderStatus status;
+    private OrderStatus status = OrderStatus.REGISTERED;
 
     @Column(columnDefinition = "TEXT")
     private String comment;
@@ -32,19 +32,15 @@ public class Order {
     @JsonIgnore
     private List<Test> tests = new ArrayList<>();
 
-    @PrePersist
-    protected void onCreate() {
-        createdDate = LocalDateTime.now();
-        if (status == null) {
-            status = OrderStatus.REGISTERED;
-        }
+    @SuppressWarnings("unused")
+    public Order() {
     }
-
-    public Order() {}
 
     public Order(Patient patient, String comment) {
         this.patient = patient;
         this.comment = comment;
+        this.createdDate = LocalDateTime.now();
+        this.status = OrderStatus.REGISTERED;
     }
 
     public Long getId() { return id; }
@@ -54,12 +50,18 @@ public class Order {
     public void setPatient(Patient patient) { this.patient = patient; }
 
     public LocalDateTime getCreatedDate() { return createdDate; }
-    public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
+    @SuppressWarnings("unused")
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate != null ? createdDate : LocalDateTime.now();
+    }
 
     public OrderStatus getStatus() { return status; }
-    public void setStatus(OrderStatus status) { this.status = status; }
+    public void setStatus(OrderStatus status) {
+        this.status = status != null ? status : OrderStatus.REGISTERED;
+    }
 
     public String getComment() { return comment; }
+    @SuppressWarnings("unused")
     public void setComment(String comment) { this.comment = comment; }
 
     public List<Test> getTests() { return tests; }

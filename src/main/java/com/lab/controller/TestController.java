@@ -1,73 +1,86 @@
 package com.lab.controller;
 
-import com.lab.entity.Test;
-import com.lab.entity.enums.TestStatus;
-import com.lab.repository.TestRepository;
+import com.lab.dto.TestDTO;
+import com.lab.dto.PageResponse;
+import com.lab.service.TestService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Map;
-
+@SuppressWarnings("unused")
 @RestController
 @RequestMapping("/api/tests")
 public class TestController {
 
-    private final TestRepository testRepository;
+    private final TestService testService;
 
-    public TestController(TestRepository testRepository) {
-        this.testRepository = testRepository;
+    public TestController(TestService testService) {
+        this.testService = testService;
     }
 
     @GetMapping
-    public List<Test> getAllTests() {
-        return testRepository.findAll();
+    public PageResponse<TestDTO> getAllTests(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+        return testService.getAllTests(page, size, sortBy, direction);
     }
 
     @GetMapping("/{id}")
-    public Test getTestById(@PathVariable Long id) {
-        return testRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Анализ с номером " + id + "не найден"));
+    public TestDTO getTestById(@PathVariable Long id) {
+        return testService.getTestById(id);
     }
 
     @PostMapping
-    public Test createTest(@RequestBody Test test) {
-        return testRepository.save(test);
+    public ResponseEntity<TestDTO> createTest(@Valid @RequestBody TestDTO testDTO) {
+        TestDTO createdTest = testService.createTest(testDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdTest);
     }
 
     @PutMapping("/{id}")
-    public Test updateTest(@PathVariable Long id, @RequestBody Test test) {
-        if (!testRepository.existsById(id)) {
-            throw new RuntimeException("Анализ с номером " + id + "не найден");
-        }
-        test.setId(id);
-        return testRepository.save(test);
+    public TestDTO updateTest(@PathVariable Long id, @Valid @RequestBody TestDTO testDTO) {
+        return testService.updateTest(id, testDTO);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteTest(@PathVariable Long id) {
-        if (!testRepository.existsById(id)) {
-            throw new RuntimeException("Анализ с номером " + id + "не найден");
-        }
-        testRepository.deleteById(id);
+    public ResponseEntity<Void> deleteTest(@PathVariable Long id) {
+        testService.deleteTest(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/order/{orderId}")
-    public List<Test> getTestsByOrderId(@PathVariable Long orderId) {
-        return testRepository.findByOrderId(orderId);
+    public PageResponse<TestDTO> getTestsByOrderId(
+            @PathVariable Long orderId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        return testService.getTestsByOrderId(orderId, page, size, sortBy, direction);
     }
 
     @PutMapping("/{id}/result")
-    public Test updateTestResult(@PathVariable Long id, @RequestBody Map<String, String> request) {
-        String result = request.get("result");
-        String referenceValues = request.get("referenceValues");
-
-        return testRepository.updateResult(id, result, referenceValues, TestStatus.COMPLETED);
+    public TestDTO updateTestResult(@PathVariable Long id, @RequestBody UpdateResultRequest request) {
+        return testService.updateTestResult(id, request.getResult(), request.getReferenceValues());
     }
+    static class UpdateResultRequest {
+        private String result;
+        private String referenceValues;
 
-    @GetMapping("/status/{status}")
-    public List<Test> getTestsByStatus(@PathVariable String status) {
-        TestStatus testStatus;
+        public String getResult() {
+            return result;
+        }
 
-            testStatus = TestStatus.valueOf(status.toUpperCase());
-        return testRepository.findByStatus(testStatus);
+        public void setResult(String result) {
+            this.result = result;
+        }
+
+        public String getReferenceValues() {
+            return referenceValues;
+        }
+
+        public void setReferenceValues(String referenceValues) {
+            this.referenceValues = referenceValues;
+        }
     }
 }
