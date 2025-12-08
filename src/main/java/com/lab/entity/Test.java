@@ -32,11 +32,25 @@ public class Test {
     @Column(nullable = false)
     private TestStatus status = TestStatus.PENDING;
 
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
     public Test() {}
 
     public Test(Order order, TestType testType) {
         this.order = order;
         this.testType = testType;
+        this.status = TestStatus.PENDING;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @SuppressWarnings("unused")
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt != null ? updatedAt : LocalDateTime.now();
     }
 
     public Long getId() { return id; }
@@ -46,10 +60,13 @@ public class Test {
     public void setOrder(Order order) { this.order = order; }
 
     public TestType getTestType() { return testType; }
+    @SuppressWarnings("unused")
     public void setTestType(TestType testType) { this.testType = testType; }
 
     public LocalDateTime getCompletedDate() { return completedDate; }
-    public void setCompletedDate(LocalDateTime completedDate) { this.completedDate = completedDate; }
+    public void setCompletedDate(LocalDateTime completedDate) {
+        this.completedDate = completedDate;
+    }
 
     public String getResult() { return result; }
     public void setResult(String result) { this.result = result; }
@@ -58,7 +75,22 @@ public class Test {
     public void setReferenceValues(String referenceValues) { this.referenceValues = referenceValues; }
 
     public TestStatus getStatus() { return status; }
-    public void setStatus(TestStatus status) { this.status = status; }
+    public void setStatus(TestStatus status) {
+        this.status = status != null ? status : TestStatus.PENDING;
+        if (this.status == TestStatus.COMPLETED && this.completedDate == null) {
+            this.completedDate = LocalDateTime.now();
+        }
+    }
+
+    @SuppressWarnings("unused")
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    @SuppressWarnings("unused")
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
+    }
+
+    @SuppressWarnings("unused")
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 
     @Override
     public String toString() {
@@ -70,6 +102,8 @@ public class Test {
                 ", result='" + result + '\'' +
                 ", referenceValues='" + referenceValues + '\'' +
                 ", status=" + status +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 '}';
     }
 }

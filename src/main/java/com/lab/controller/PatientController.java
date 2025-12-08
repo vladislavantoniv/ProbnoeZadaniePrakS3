@@ -1,75 +1,64 @@
 package com.lab.controller;
 
-import com.lab.entity.Patient;
-import com.lab.repository.PatientRepository;
+import com.lab.dto.PatientDTO;
+import com.lab.dto.PageResponse;
+import com.lab.service.PatientService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.time.LocalDate;
-import java.util.List;
-
+@SuppressWarnings("unused")
 @RestController
 @RequestMapping("/api/patients")
 public class PatientController {
 
-    private final PatientRepository patientRepository;
+    private final PatientService patientService;
 
-    public PatientController(PatientRepository patientRepository) {
-        this.patientRepository = patientRepository;
+    public PatientController(PatientService patientService) {
+        this.patientService = patientService;
     }
 
     @GetMapping
-    public List<Patient> getAllPatients() {
-        return patientRepository.findAll();
+    public PageResponse<PatientDTO> getAllPatients(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        return patientService.getAllPatients(page, size, sortBy, direction);
     }
 
     @GetMapping("/{id}")
-    public Patient getPatientById(@PathVariable Long id) {
-        return patientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Пациент с номером: " + id + "не найден"));
+    public PatientDTO getPatientById(@PathVariable Long id) {
+        return patientService.getPatientById(id);
     }
 
     @PostMapping
-    public Patient createPatient(@RequestBody Patient patient) {
-        return patientRepository.save(patient);
+    public ResponseEntity<PatientDTO> createPatient(@Valid @RequestBody PatientDTO patientDTO) {
+        PatientDTO createdPatient = patientService.createPatient(patientDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdPatient);
     }
 
     @PutMapping("/{id}")
-    public Patient updatePatient(@PathVariable Long id, @RequestBody Patient patient) {
-        if (!patientRepository.existsById(id)) {
-            throw new RuntimeException("Пациент с номером: " + id + "не найден");
-        }
-        patient.setId(id);
-        return patientRepository.save(patient);
+    public PatientDTO updatePatient(@PathVariable Long id, @Valid @RequestBody PatientDTO patientDTO) {
+        return patientService.updatePatient(id, patientDTO);
     }
 
     @DeleteMapping("/{id}")
-    public void deletePatient(@PathVariable Long id) {
-        if (!patientRepository.existsById(id)) {
-            throw new RuntimeException("Пациент с номером: " + id + "не найден");
-        }
-        patientRepository.deleteById(id);
-    }
-
-    @GetMapping("/search/lastname")
-    public List<Patient> searchPatientsByLastName(@RequestParam String lastName) {
-        return patientRepository.findByLastName(lastName);
+    public ResponseEntity<Void> deletePatient(@PathVariable Long id) {
+        patientService.deletePatient(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/search")
-    public List<Patient> searchPatients(
+    public PageResponse<PatientDTO> searchPatients(
             @RequestParam(required = false) String lastName,
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String middleName,
-            @RequestParam(required = false) String birthDate) {
-
-        LocalDate parsedBirthDate = null;
-        if (birthDate != null && !birthDate.trim().isEmpty()) {
-                parsedBirthDate = LocalDate.parse(birthDate);
-        }
-
-        List<Patient> patients = patientRepository.searchPatients(
-                lastName, firstName, middleName, parsedBirthDate
-        );
-
-        return patients;
+            @RequestParam(required = false) String birthDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "lastName") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        return patientService.searchPatients(lastName, firstName, middleName, birthDate, page, size, sortBy, direction);
     }
 }
